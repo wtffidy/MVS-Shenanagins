@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="color-scheme" content="dark">
+    <title>MVS TV Probe</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <main class="page">
+        <header class="header">
+            <div class="brand">
+                <div class="brand-mark">MVS</div>
+                <div>
+                    <p class="eyebrow">TIZEN PORT VALIDATION</p>
+                    <h1>Device compatibility</h1>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span id="overall-status" class="status-pill pending">Checking device</span>
+                <button id="copy-report" class="button secondary" type="button">Copy report</button>
+                <button id="run-tests" class="button primary" type="button">Run tests</button>
+            </div>
+        </header>
+
+        <section class="device-card">
+            <div>
+                <p class="eyebrow">DEVICE</p>
+                <h2 id="device-name">Detecting device…</h2>
+                <p id="device-summary" class="muted">Reading browser and display capabilities</p>
+            </div>
+            <div class="device-metrics">
+                <div><span>Resolution</span><strong id="resolution">—</strong></div>
+                <div><span>Pixel ratio</span><strong id="pixel-ratio">—</strong></div>
+                <div><span>CPU threads</span><strong id="cpu-threads">—</strong></div>
+                <div><span>Touch points</span><strong id="touch-points">—</strong></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">RUNTIME CHECKS</p>
+                    <h2>Required browser features</h2>
+                </div>
+                <p class="section-note">These tests do not connect to AQW or send device data anywhere.</p>
+            </div>
+            <div id="test-grid" class="test-grid">
+                <article class="test-card" data-test="wasm">
+                    <div class="test-top"><h3>WebAssembly</h3><span class="result pending">WAIT</span></div>
+                    <p>Loads and executes a tiny WASM module.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="webgl">
+                    <div class="test-top"><h3>WebGL renderer</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks WebGL 2 and WebGL 1 fallback.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="websocket">
+                    <div class="test-top"><h3>WebSocket</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks the browser socket API used by the MVS bridge.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="audio">
+                    <div class="test-top"><h3>Web Audio</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks audio context support for game audio.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="storage">
+                    <div class="test-top"><h3>Local storage</h3><span class="result pending">WAIT</span></div>
+                    <p>Writes and removes a temporary local value.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="indexeddb">
+                    <div class="test-top"><h3>IndexedDB</h3><span class="result pending">WAIT</span></div>
+                    <p>Opens and closes a temporary browser database.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="fetch">
+                    <div class="test-top"><h3>Fetch API</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks the request API used for game resources.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="pointer">
+                    <div class="test-top"><h3>Pointer input</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks pointer events and touch capability.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="tv-remote">
+                    <div class="test-top"><h3>TV remote API</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks Samsung key registration and mandatory remote keys.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+                <article class="test-card" data-test="animation">
+                    <div class="test-top"><h3>Animation timing</h3><span class="result pending">WAIT</span></div>
+                    <p>Checks requestAnimationFrame for game rendering.</p>
+                    <small class="detail">Waiting for test</small>
+                </article>
+            </div>
+        </section>
+
+        <section class="section input-section">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">INPUT CHECK</p>
+                    <h2>Press buttons on the remote</h2>
+                </div>
+                <p class="section-note">Arrow, Enter, and Back are displayed here. Back is never intercepted.</p>
+            </div>
+            <div class="input-panel">
+                <div class="key-readout">
+                    <span class="eyebrow">LAST KEY</span>
+                    <strong id="last-key">Waiting for input</strong>
+                    <span id="last-key-code" class="muted">Key code: —</span>
+                </div>
+                <div class="key-hints">
+                    <span>↑</span><span>←</span><span>Enter</span><span>→</span><span>↓</span><span>Back</span>
+                </div>
+            </div>
+            <p id="remote-note" class="muted">Use a TV remote or touch the screen to check input events.</p>
+        </section>
+
+        <details class="report-section">
+            <summary>Technical report</summary>
+            <pre id="report">Waiting for tests…</pre>
+        </details>
+
+        <footer>
+            <span>MVS · Samsung TV probe · 0.1.0</span>
+            <span id="test-time">Not yet tested</span>
+        </footer>
+    </main>
+</body>
+</html>
