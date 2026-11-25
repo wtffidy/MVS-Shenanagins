@@ -4,7 +4,7 @@
         id="http://com.arglax.mvs.tvprobe"
         version="0.1.0"
         viewmodes="maximized">
-    <tizen:application id="com.arglax.mvstvprobe"
+    <tizen:application id="mvsprobe01.mvstvprobe"
                        package="mvsprobe01"
                        required_version="2.3" />
     <content src="index.html" />
