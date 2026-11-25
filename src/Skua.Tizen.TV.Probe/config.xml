@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://com.arglax.mvs.tvprobe"
+        version="0.1.0"
+        viewmodes="maximized">
+    <tizen:application id="com.arglax.mvstvprobe"
+                       package="mvsprobe01"
+                       required_version="2.3" />
+    <content src="index.html" />
+    <name>MVS TV Probe</name>
+    <description>Checks the Samsung TV browser features needed by the MVS port.</description>
+    <feature name="http://tizen.org/feature/tv.inputdevice" />
+    <tizen:profile name="tv-samsung" />
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice" />
+    <tizen:setting screen-orientation="landscape"
+                   context-menu="disable"
+                   background-support="disable"
+                   encryption="disable"
+                   install-location="auto" />
+</widget>
