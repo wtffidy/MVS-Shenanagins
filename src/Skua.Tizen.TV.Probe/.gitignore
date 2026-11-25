@@ -1,0 +1,4 @@
+.buildResult/
+artifacts/
+*.wgt
+*.tpk
