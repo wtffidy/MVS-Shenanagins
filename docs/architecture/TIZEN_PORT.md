@@ -47,8 +47,8 @@ For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NE
 1. Keep the existing C# bot and script engine authoritative. Do not translate the bot API or community scripts into JavaScript.
 2. Package a local Tizen Web client for each profile. It will use the existing Ruffle frontend and customized game assets wherever the device's WebView supports them.
 3. Keep the Tizen-specific presentation thin. TV and Family Hub get separate navigation/layout adapters, while shared game integration remains common.
-4. Provide a companion/runtime bridge for the C# services that cannot run inside a Web `.wgt`. The first implementation must prove the connection model before it is treated as a usable MVS port.
-5. The bridge must not expose AQW login traffic or script-control messages over an unauthenticated, unencrypted LAN connection. Pairing, session authentication, replay protection, and encrypted transport are requirements, not optional polish.
+4. Prefer an on-device native Tizen .NET host where the device profile supports it. The Family Hub prototype uses NUI WebView to load the existing Ruffle page from the same app process, keeping the C# bot runtime and game proxy on-device.
+5. Keep the existing loopback listener loopback-only. A Web `.wgt` that cannot host the C# runtime needs a separately designed companion bridge; it must not expose AQW login traffic or script-control messages over an unauthenticated, unencrypted LAN connection. Pairing, session authentication, replay protection, and encrypted transport are requirements, not optional polish.
 6. Preserve the current Android/desktop behavior. New remote support must be opt-in and must not widen the existing loopback listener by default.
 
 ## Known engineering blockers
@@ -107,7 +107,7 @@ The branch now contains `src/Tizen/TV`, a Samsung TV Web application manifest an
 
 `src/Skua.Flash.Ruffle/RuffleAssetExporter.cs` exports the Ruffle resources embedded in the existing assembly and reuses the exact `RuffleHost.PatchRuffle` transformation. `src/tools/RuffleAssetPack` provides the build-time command used by `src/Tizen/build-tizen-tv.ps1`.
 
-The Family Hub app and the authenticated runtime connection have not been implemented yet.
+The TV Web `.wgt` remains a smoke-test shell and does not host the C# bot runtime. The native Family Hub runtime prototype is now present, but its build requires Samsung's Tizen .NET SDK and its runtime behavior has not yet been tested on refrigerator hardware.
 
 ## Build and verification status
 
