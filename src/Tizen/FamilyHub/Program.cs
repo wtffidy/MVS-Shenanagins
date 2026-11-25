@@ -244,12 +244,23 @@ public sealed class FamilyHubApplication : NUIApplication
         if (_scriptManager is null)
             return;
 
-        Exception? error = await _scriptManager.StartScript().ConfigureAwait(false);
-        RunOnUiThread(() =>
+        try
         {
-            SendToUi(new { type = "operation", action = "startScript", success = error is null, message = error?.Message ?? "Script started." });
-            RequestStatus();
-        });
+            Exception? error = await _scriptManager.StartScript().ConfigureAwait(false);
+            RunOnUiThread(() =>
+            {
+                SendToUi(new { type = "operation", action = "startScript", success = error is null, message = error?.Message ?? "Script started." });
+                RequestStatus();
+            });
+        }
+        catch (Exception ex)
+        {
+            RunOnUiThread(() =>
+            {
+                SendToUi(new { type = "operation", action = "startScript", success = false, message = ex.Message });
+                RequestStatus();
+            });
+        }
     }
 
     private async Task StopScriptAsync()
@@ -257,12 +268,23 @@ public sealed class FamilyHubApplication : NUIApplication
         if (_scriptManager is null)
             return;
 
-        await _scriptManager.StopScript().ConfigureAwait(false);
-        RunOnUiThread(() =>
+        try
         {
-            SendToUi(new { type = "operation", action = "stopScript", success = true, message = "Script stopped." });
-            RequestStatus();
-        });
+            await _scriptManager.StopScript().ConfigureAwait(false);
+            RunOnUiThread(() =>
+            {
+                SendToUi(new { type = "operation", action = "stopScript", success = true, message = "Script stopped." });
+                RequestStatus();
+            });
+        }
+        catch (Exception ex)
+        {
+            RunOnUiThread(() =>
+            {
+                SendToUi(new { type = "operation", action = "stopScript", success = false, message = ex.Message });
+                RequestStatus();
+            });
+        }
     }
 
     private async Task SetScriptPausedAsync(JsonElement root)
@@ -270,14 +292,25 @@ public sealed class FamilyHubApplication : NUIApplication
         if (_scriptManager is null || !root.TryGetProperty("paused", out JsonElement pausedElement))
             return;
 
-        bool paused = pausedElement.GetBoolean();
-        bool success = await _scriptManager.SetPausedAsync(paused).ConfigureAwait(false);
-        RunOnUiThread(() =>
+        try
         {
-            string result = paused ? "Script paused." : "Script resumed.";
-            SendToUi(new { type = "operation", action = "pauseScript", success, message = success ? result : "Could not change script state." });
-            RequestStatus();
-        });
+            bool paused = pausedElement.GetBoolean();
+            bool success = await _scriptManager.SetPausedAsync(paused).ConfigureAwait(false);
+            RunOnUiThread(() =>
+            {
+                string result = paused ? "Script paused." : "Script resumed.";
+                SendToUi(new { type = "operation", action = "pauseScript", success, message = success ? result : "Could not change script state." });
+                RequestStatus();
+            });
+        }
+        catch (Exception ex)
+        {
+            RunOnUiThread(() =>
+            {
+                SendToUi(new { type = "operation", action = "pauseScript", success = false, message = ex.Message });
+                RequestStatus();
+            });
+        }
     }
 
     private void SendScriptLogs()
