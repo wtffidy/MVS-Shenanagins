@@ -1,0 +1,60 @@
+name: Tizen asset validation
+
+on:
+  push:
+    branches:
+      - feature/tizen-tv-family-hub
+    paths:
+      - ".github/workflows/tizen-assets.yml"
+      - "src/Skua.Flash.Ruffle/**"
+      - "src/tools/RuffleAssetPack/**"
+      - "src/Tizen/**"
+  pull_request:
+    paths:
+      - ".github/workflows/tizen-assets.yml"
+      - "src/Skua.Flash.Ruffle/**"
+      - "src/tools/RuffleAssetPack/**"
+      - "src/Tizen/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the Ruffle asset exporter
+        run: dotnet build src/tools/RuffleAssetPack/RuffleAssetPack.csproj --configuration Release
+
+      - name: Export patched Ruffle assets
+        run: dotnet run --project src/tools/RuffleAssetPack/RuffleAssetPack.csproj --configuration Release -- "$RUNNER_TEMP/mvs-tizen-assets"
+
+      - name: Validate Tizen client JavaScript
+        run: node --check src/Tizen/Shared/app.js
+
+      - name: Validate Samsung TV manifest XML
+        run: python -c "import xml.etree.ElementTree as ET; ET.parse('src/Tizen/TV/config.xml')"
+
+      - name: Verify exported client assets
+        run: |
+          test -s "$RUNNER_TEMP/mvs-tizen-assets/ruffle/ruffle.js"
+          test -s "$RUNNER_TEMP/mvs-tizen-assets/ruffle/ruffle.wasm"
+          test -s "$RUNNER_TEMP/mvs-tizen-assets/skua.swf"
+
+      - name: Upload exported Ruffle assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvs-tizen-ruffle-assets
+          path: ${{ runner.temp }}/mvs-tizen-assets
+          if-no-files-found: error
