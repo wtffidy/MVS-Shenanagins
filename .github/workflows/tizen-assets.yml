@@ -24,21 +24,26 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Install .NET 10
+      - name: Install .NET 8 and 10 SDKs
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Build the Ruffle asset exporter
-        run: dotnet build src/tools/RuffleAssetPack/RuffleAssetPack.csproj --configuration Release
+      - name: Build the shared runtime for Tizen .NET 8
+        run: dotnet build src/tools/RuffleAssetPack/RuffleAssetPack.csproj --framework net8.0 --configuration Release
+
+      - name: Build the existing shared runtime for .NET 10
+        run: dotnet build src/tools/RuffleAssetPack/RuffleAssetPack.csproj --framework net10.0 --configuration Release
 
       - name: Export patched Ruffle assets
-        run: dotnet run --project src/tools/RuffleAssetPack/RuffleAssetPack.csproj --configuration Release -- "$RUNNER_TEMP/mvs-tizen-assets"
+        run: dotnet run --project src/tools/RuffleAssetPack/RuffleAssetPack.csproj --framework net10.0 --configuration Release -- "$RUNNER_TEMP/mvs-tizen-assets"
 
       - name: Validate Tizen client JavaScript
         run: node --check src/Tizen/Shared/app.js
