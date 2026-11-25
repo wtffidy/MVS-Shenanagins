@@ -25,6 +25,41 @@ on:
       - "src/Tizen/**"
 
 jobs:
+
+  family-hub-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pin the .NET 8 SDK for the Tizen workload
+        shell: bash
+        run: |
+          sdk_version="$(dotnet --list-sdks | awk '$1 ~ /^8\\.0\\./ { version = $1 } END { print version }')"
+          if [ -z "$sdk_version" ]; then
+            echo "No .NET 8 SDK was found."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/tizen-workload"
+          printf '{ "sdk": { "version": "%s", "rollForward": "latestPatch" } }\\n' "$sdk_version" > "$RUNNER_TEMP/tizen-workload/global.json"
+          echo "Using .NET SDK $sdk_version for the Tizen workload."
+
+      - name: Install Samsung Tizen .NET workload
+        working-directory: ${{ runner.temp }}/tizen-workload
+        shell: bash
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh | sudo bash
+
+      - name: Build the native Family Hub application
+        working-directory: ${{ runner.temp }}/tizen-workload
+        run: dotnet build "$GITHUB_WORKSPACE/src/Tizen/FamilyHub/Mvs.FamilyHub.csproj" --configuration Release --framework net8.0-tizen10.0
+
   validate:
     runs-on: ubuntu-latest
 
