@@ -113,7 +113,7 @@ The MVS script engine compiles and loads C# assemblies dynamically. The existing
 
 ## Build and verification status
 
-The shared .NET 8/.NET 10 projects have been built in GitHub Actions previously; the latest run validates the extracted shared service registrations, both client JavaScript files, both manifests, and packaged Family Hub resources. No Tizen `.wgt` or `.tpk` has been produced, and neither client has been installed or run on hardware. This execution environment does not have Samsung Tizen Studio/CLI, so a successful native Tizen package build cannot be claimed here.
+The shared .NET 8/.NET 10 projects and the native Family Hub application have now compiled successfully in GitHub Actions using Samsung's official Tizen .NET workload (`net8.0-tizen10.0`). The same run validates the patched Ruffle export, both client JavaScript files, both manifests, and packaged Family Hub resources. No signed Tizen `.wgt` or `.tpk` has been produced, and neither client has been installed or run on hardware. Successful compilation does not yet prove Ruffle/WebAssembly or dynamic Roslyn script loading works on a real refrigerator. This execution environment does not have Samsung Tizen Studio/CLI, so a successful native Tizen package build cannot be claimed here.
 
 The repository's `src/BuildProject.bat` references `Skua.sln` and `package-build.ps1`, neither of which appears in the checked-in tree. The documented Android build path is `src/build-android.sh`. Tizen builds will need their own explicit build scripts and documented SDK prerequisites.
 
