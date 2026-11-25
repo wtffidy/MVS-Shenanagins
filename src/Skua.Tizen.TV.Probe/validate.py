@@ -38,6 +38,9 @@ def main() -> None:
     if not application_id or not package_id:
         fail("Tizen application ID and package ID must both be set.")
 
+    if not application_id.startswith(package_id + "."):
+        fail("Tizen application ID must start with the package ID followed by a project identifier.")
+
     if application.attrib.get("required_version") != "5.5":
         fail("The probe baseline is Tizen 5.5, the first Samsung TV platform generation documented with WebAssembly support.")
 
