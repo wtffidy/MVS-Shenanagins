@@ -1,6 +1,6 @@
 # Samsung Tizen Port: Architecture and Implementation Plan
 
-**Status:** Architecture decision recorded; implementation not yet started  
+**Status:** Architecture recorded; TV compatibility shell and patched Ruffle asset export added; runtime integration and device testing remain open  
 **Working branch:** `feature/tizen-tv-family-hub`  
 **Upstream:** `Arglax/MVS` remains untouched
 
@@ -54,6 +54,7 @@ For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NE
 ## Known engineering blockers
 
 - `RuffleHost` currently binds to `IPAddress.Loopback`.
+- `RuffleHost.WriteResponse()` currently emits wildcard CORS headers (`Access-Control-Allow-Origin: *` and wildcard headers/methods). This is acceptable only while the host remains loopback-bound; it must be replaced with an authenticated, origin-aware policy before any LAN listener is enabled.
 - `RuffleHost.BuildConfigJson()` currently publishes loopback WebSocket socket-proxy URLs.
 - `ControlChannel` owns one active WebSocket. A second client replaces the first.
 - The game bridge derives its base URL from the local page origin. A packaged Tizen client needs an explicit, authenticated backend endpoint.
@@ -99,6 +100,14 @@ For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NE
 - Validate Ruffle startup, WebAssembly execution, AQW login, map loading, socket transport, C# ExternalInterface calls, scripts, input, audio, and lifecycle behavior.
 - Test TV remote navigation separately from Family Hub touch navigation.
 - Only call a device supported after installation and runtime testing on that device/profile.
+
+## Current implementation status
+
+The branch now contains `src/Tizen/TV`, a Samsung TV Web application manifest and remote-first smoke-test shell. It checks WebAssembly, WebGL, WebSockets, and Web Crypto, and can load the packaged MVS SWF through the exported Ruffle engine with network access disabled. This is intended to validate the television's browser/rendering path, not to represent a completed MVS client.
+
+`src/Skua.Flash.Ruffle/RuffleAssetExporter.cs` exports the Ruffle resources embedded in the existing assembly and reuses the exact `RuffleHost.PatchRuffle` transformation. `src/tools/RuffleAssetPack` provides the build-time command used by `src/Tizen/build-tizen-tv.ps1`.
+
+The Family Hub app and the authenticated runtime connection have not been implemented yet.
 
 ## Build and verification status
 
