@@ -1,44 +1,50 @@
-# MVS Tizen TV client
+# Samsung Tizen clients
 
-This is the first **Tizen compatibility package**, not yet the complete TV port.
+This folder contains separate clients for Samsung Smart TV and Samsung Family Hub. They are not interchangeable packages.
 
-## What this stage includes
+## Samsung Smart TV
 
-- A Samsung Smart TV Web application manifest targeting the `tv-samsung` profile.
-- A TV-first interface with remote-control focus and Back-key handling.
-- A build-time exporter that copies the exact Ruffle web resources embedded by MVS.
-- The same Ruffle compatibility patches used by the existing C# `RuffleHost`.
-- A local smoke test that loads the packaged `skua.swf` with AQW networking disabled.
-- Runtime checks for WebAssembly, WebGL, WebSockets, and Web Crypto.
+`TV/config.xml` targets the `tv-samsung` web profile. The current WGT is a **browser/rendering smoke test**:
 
-The local smoke test is intended to verify the Tizen browser/graphics path on a real television. It does **not** log into AQW, connect to the bot, or execute scripts yet.
+- remote-friendly initial shell
+- WebAssembly, WebGL, WebSocket, and Web Crypto capability checks
+- locally bundled MVS Ruffle engine and SWF
+- Ruffle is started with network access disabled for the smoke test
 
-## Why the C# runtime is not exposed over Wi-Fi yet
+It does not yet log into AQW, expose the C# bot runtime, or execute MVS scripts. A secure runtime connection is still needed for a full TV client.
 
-The current MVS runtime binds its HTTP server to loopback and its responses currently advertise wildcard CORS access. Simply changing the listener to bind to the LAN would expose an unauthenticated game proxy and WebSocket control channel. That would put account and script-control traffic at risk.
-
-The next integration stage must add authenticated pairing, protected transport, and explicit remote-session ownership before a Tizen client can connect to the C# runtime.
-
-## Prerequisites
-
-- .NET 10 SDK (the asset exporter references the existing `Skua.Flash.Ruffle` project).
-- Samsung Tizen Studio / CLI with a TV profile that supports WebAssembly.
-- A configured Tizen signing certificate profile.
-
-## Build
-
-In PowerShell, from the repository root:
+Build with Samsung Tizen Studio, a TV Web profile, and a configured signing certificate:
 
 ```powershell
 $env:TIZEN_CERT_PROFILE = "YourCertificateProfile"; .\src\Tizen\build-tizen-tv.ps1
 ```
 
-You can also pass `-CertificateProfile` and `-Configuration` directly.
+The resulting package is copied to `src/Tizen/artifacts/MVS-Tizen-TV.wgt`.
 
-The resulting `.wgt` is copied to `src/Tizen/artifacts/`.
+Samsung's TV testing FAQ currently describes WGT as the TV app testing package and says TPK packages cannot be installed for TV testing. Samsung also publishes .NET TV framework documentation, so distribution options are model- and program-dependent. Do not treat the Family Hub TPK as a TV package.
 
-The package declares Tizen 5.5 as its minimum because the bundled Ruffle runtime requires WebAssembly. Older TV platforms are not targeted by this package.
+## Samsung Family Hub
 
-## Family Hub
+`FamilyHub/` is a native Tizen .NET NUI application targeting `net8.0-tizen10.0` and the `common` profile.
 
-Family Hub is deliberately not built from the TV manifest. Samsung documents that Family Hub and Smart TV platforms are not fully compatible, and the Family Hub package needs its own profile and interaction validation. A fridge package will be added as a separate target rather than reusing this TV manifest and claiming cross-device compatibility.
+It runs the MVS C# runtime locally, starts the existing loopback-only Ruffle host, loads the original Ruffle page, and exposes a touch-first Game / Scripts / Bot / Logs UI. The current bridge supports script discovery, loading, start, pause/resume, stop, status, and recent script logs.
+
+Build using Samsung Tizen Studio with the Tizen 10 IoT/.NET workload and a configured author certificate:
+
+```powershell
+.\src\Tizen\build-familyhub.ps1
+```
+
+The resulting package is copied to `src/Tizen/artifacts/MVS-FamilyHub.tpk`.
+
+This is a runtime-integration prototype, not a completed MVS client. Script-option dialogs, file selection, plugin windows, account management, all remaining helper screens, and device lifecycle handling are still unfinished. The target Tizen version is provisional until the exact refrigerator model and firmware are known.
+
+## Shared Ruffle assets
+
+`Skua.Flash.Ruffle` embeds the modified Ruffle assets. `RuffleAssetPack` exports those embedded files and applies the same Ruffle compatibility patch used by the desktop/Android host. Do not copy the raw upstream Ruffle folder into a Tizen package and assume it is equivalent.
+
+## Validation
+
+GitHub Actions builds the shared libraries for .NET 8 and .NET 10, exports the patched Ruffle assets, checks the TV and Family Hub JavaScript syntax, parses both manifests, and verifies the expected packaged resources.
+
+The native Tizen application itself still requires the Samsung Tizen SDK and actual device validation. No hardware compatibility claim is made until it has been installed and exercised on the target model.
