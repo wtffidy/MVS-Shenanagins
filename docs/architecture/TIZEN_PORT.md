@@ -1,6 +1,6 @@
 # Samsung Tizen Port: Architecture and Implementation Plan
 
-**Status:** Architecture recorded; TV compatibility shell and patched Ruffle asset export added; runtime integration and device testing remain open  
+**Status:** Patched Ruffle asset export, TV Web-app smoke test, and native Family Hub runtime prototype added; device packaging and hardware testing remain open  
 **Working branch:** `feature/tizen-tv-family-hub`  
 **Upstream:** `Arglax/MVS` remains untouched
 
@@ -24,7 +24,7 @@ This is a platform port, not a rewrite of MVS and not a remote-control-only dash
 
 The conservative install/test target is a Tizen **Web application** packaged as `.wgt`.
 
-Samsung's current Application Testing FAQ states that TVs support Web `.wgt` applications and do not support installing native `.tpk` packages through that testing path. Samsung also maintains .NET TV documentation and Seller Office documentation that mention .NET/`.tpk` packages, so native distribution is not being declared impossible. It is simply not the safe first target for a developer-tested TV build.
+Samsung's current Application Testing FAQ says Samsung TVs support Web `.wgt` applications and do not support installing native `.tpk` packages for TV testing. Samsung also maintains legacy/current .NET TV framework and template documentation, so the existence of a .NET TV toolchain should not be confused with a package we can currently sideload and validate on a consumer TV. The first TV target here is therefore a Web `.wgt`; it is only a browser/rendering smoke test until a secure C# runtime connection is available.
 
 The TV app needs a remote-first interface: focus navigation, directional keys, Enter/Back behavior, legible 10-foot typography, and no assumptions about touch or a physical keyboard.
 
@@ -32,15 +32,15 @@ The TV app needs a remote-first interface: focus navigation, directional keys, E
 
 Family Hub is a separate Tizen device profile and must have its own package configuration and interaction layout. It should use a touch-first UI with large targets, responsive portrait/landscape layout, and safe idle/resume behavior.
 
-The TV and Family Hub frontends may share game assets and application logic, but they must not be treated as interchangeable packages. Exact model and Tizen profile support must be checked before claiming a build is installable on a specific refrigerator.
+The branch now contains a native Tizen .NET NUI prototype targeting `net8.0-tizen10.0` and the `common` profile. It starts MVS's existing loopback-only Ruffle host in-process, loads the packaged UI through NUI WebView, and exposes script discovery/load/start/pause/stop/status/log operations through the native JavaScript message bridge. It is a Family Hub prototype, not yet a finished MVS client: option dialogs are safely cancelled, while account management, file selection, plugin windows, complete helper screens, lifecycle behavior, and device-specific polish remain unfinished. The project requires a Tizen 10 compatible device/runtime as currently configured.
 
 ### Tizen .NET
 
-Samsung documents Tizen .NET applications and NUI's WebView. NUI WebView can load a local packaged HTML page and exposes JavaScript messaging APIs, which could be useful for a future on-device C# shell.
+Samsung documents Tizen .NET applications and NUI WebView. NUI WebView loads local packaged resources and supports a C#-to-JavaScript message bridge. The Family Hub prototype uses that approach.
 
-However, the Tizen .NET framework targets Tizen-specific .NET versions (for example .NET 8 for current Tizen 10 platform targets), while this repository currently targets .NET 10. The existing Avalonia Android app is not a Tizen app and cannot be repackaged as one. A native Tizen shell would require a separately validated target framework, service layer, and packaging path.
+The shared MVS runtime libraries are now multi-targeted to `net8.0;net10.0`, preserving the current .NET 10 target while providing a .NET 8 build for the Tizen 10 project. The Android Avalonia shell itself is not reused or repackaged.
 
-For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NET Family Hub shell remains an option only after its model/runtime support and the MVS core's target compatibility are proven.
+The MVS script engine compiles and loads C# assemblies dynamically. The existing `ScriptLoadContext` already provides a custom `AssemblyLoadContext`, which is the right direction for Samsung's documented Tizen assembly-loading constraints. The Family Hub manifest deliberately does not request the optional `prefer_dotnet_aot` mode. Dynamic script compilation and assembly loading must still be tested on the actual device; no script-runtime success is claimed yet.
 
 ## Architecture decision
 
@@ -55,11 +55,11 @@ For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NE
 
 - `RuffleHost` currently binds to `IPAddress.Loopback`.
 - `RuffleHost.WriteResponse()` currently emits wildcard CORS headers (`Access-Control-Allow-Origin: *` and wildcard headers/methods). This is acceptable only while the host remains loopback-bound; it must be replaced with an authenticated, origin-aware policy before any LAN listener is enabled.
-- `RuffleHost.BuildConfigJson()` currently publishes loopback WebSocket socket-proxy URLs.
+- `RuffleHost.BuildConfigJson()` publishes loopback WebSocket socket-proxy URLs. This is correct for the on-device Family Hub host, but not directly usable from a remote TV Web app.
 - `ControlChannel` owns one active WebSocket. A second client replaces the first.
-- The game bridge derives its base URL from the local page origin. A packaged Tizen client needs an explicit, authenticated backend endpoint.
+- The game bridge derives its base URL from the local page origin. A remote TV client needs an authenticated endpoint and explicit origin handling.
 - The current Ruffle bundle is patched at runtime by `RuffleHost.PatchRuffle`. Packaging the raw source web folder without applying those patches would silently lose important MVS behavior.
-- The C# script compiler uses Roslyn to emit assemblies to disk and load them dynamically. A browser/WASM-only design must not be assumed to support the full scripting runtime without a focused proof.
+- The C# script compiler uses Roslyn to emit assemblies to disk and load them dynamically. The existing custom load context helps with Tizen's assembly resolution rules, but the runtime behavior is still unverified on hardware. A browser/WASM-only TV design cannot run this C# script engine by itself.
 - Existing Android clipboard, file picker, process, audio, screenshot, lifecycle, thermal, and notification services are platform-specific. Each Tizen interaction must be implemented, adapted, or explicitly hidden.
 - Samsung TV and Family Hub devices have their own lifecycle, input, WebView, memory, and package constraints.
 
@@ -71,13 +71,13 @@ For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NE
 - Verify each target's supported WebView/WebAssembly features and install path.
 - Set a minimum supported Tizen profile per package; do not infer support from the product year alone.
 
-### Phase 1: Tizen web clients
+### Phase 1: Tizen clients
 
-- Add a shared Tizen web-client source tree.
-- Add separate TV and Family Hub package manifests/configuration.
-- Bundle game scripts and Ruffle/WebAssembly assets locally.
+- Add separate TV and Family Hub package configurations.
+- Bundle and validate the patched Ruffle assets.
 - Keep account credentials out of localStorage and query strings.
-- Add profile-specific focus/touch navigation and a recoverable startup/error screen.
+- Finish TV remote navigation and the Family Hub touch-first UI.
+- Keep device-specific package resources under the Tizen `res` directory.
 
 ### Phase 2: C# runtime bridge
 
@@ -103,15 +103,17 @@ For now, a Web `.wgt` client is the reliable common baseline. A native Tizen .NE
 
 ## Current implementation status
 
-The branch now contains `src/Tizen/TV`, a Samsung TV Web application manifest and remote-first smoke-test shell. It checks WebAssembly, WebGL, WebSockets, and Web Crypto, and can load the packaged MVS SWF through the exported Ruffle engine with network access disabled. This is intended to validate the television's browser/rendering path, not to represent a completed MVS client.
+**TV:** `src/Tizen/TV` contains a Samsung TV Web application manifest and remote-first smoke-test shell. It checks WebAssembly, WebGL, WebSockets, and Web Crypto, and can load the packaged MVS SWF through the exported Ruffle engine with network access disabled. It does not log into AQW, connect to the C# bot runtime, or run MVS scripts. A secure remote runtime bridge is still required for a useful full TV client.
 
-`src/Skua.Flash.Ruffle/RuffleAssetExporter.cs` exports the Ruffle resources embedded in the existing assembly and reuses the exact `RuffleHost.PatchRuffle` transformation. `src/tools/RuffleAssetPack` provides the build-time command used by `src/Tizen/build-tizen-tv.ps1`.
+**Family Hub:** `src/Tizen/FamilyHub` contains a native NUI .NET host targeting Tizen 10, a packaged touch UI under `res/web`, and a JavaScript message bridge for MVS status and script controls. It launches the existing loopback-only `RuffleHost` and reuses `RuffleFlashUtil` and the shared bot services. Unsupported dialogs currently cancel safely. This is an integration prototype, not a completed MVS interface.
 
-The TV Web `.wgt` remains a smoke-test shell and does not host the C# bot runtime. The native Family Hub runtime prototype is now present, but its build requires Samsung's Tizen .NET SDK and its runtime behavior has not yet been tested on refrigerator hardware.
+**Shared code:** The core runtime projects and Ruffle assembly now target both `net8.0` and `net10.0`. The shared bot service registrations were moved into `Skua.Core.AppStartup.Services` so the Tizen host can compose the existing MVS services without bootstrapping Avalonia.
+
+**Ruffle assets:** `src/Skua.Flash.Ruffle/RuffleAssetExporter.cs` exports the Ruffle resources embedded in the existing assembly and reuses the exact `RuffleHost.PatchRuffle` transformation. `src/tools/RuffleAssetPack` provides the build-time command used by the TV package script and CI validation.
 
 ## Build and verification status
 
-No Tizen package or .NET build has been produced yet. The current execution environment does not have the .NET SDK or Tizen Studio/CLI installed, so source inspection and repository changes can proceed here, but a successful local device package build cannot be claimed from this environment.
+The shared .NET 8/.NET 10 projects have been built in GitHub Actions previously; the latest run validates the extracted shared service registrations, both client JavaScript files, both manifests, and packaged Family Hub resources. No Tizen `.wgt` or `.tpk` has been produced, and neither client has been installed or run on hardware. This execution environment does not have Samsung Tizen Studio/CLI, so a successful native Tizen package build cannot be claimed here.
 
 The repository's `src/BuildProject.bat` references `Skua.sln` and `package-build.ps1`, neither of which appears in the checked-in tree. The documented Android build path is `src/build-android.sh`. Tizen builds will need their own explicit build scripts and documented SDK prerequisites.
 
