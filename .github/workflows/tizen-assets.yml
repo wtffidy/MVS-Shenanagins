@@ -67,7 +67,7 @@ jobs:
         run: |
           mkdir -p "$HOME" "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
-          dotnet build "$GITHUB_WORKSPACE/src/Tizen/FamilyHub/Mvs.FamilyHub.csproj" --configuration Release --framework net8.0-tizen10.0
+          dotnet build "$GITHUB_WORKSPACE/src/Tizen/FamilyHub/Mvs.FamilyHub.csproj" --configuration Release --framework net8.0-tizen10.0 -p:TizenBuild=true
 
   validate:
     runs-on: ubuntu-latest
