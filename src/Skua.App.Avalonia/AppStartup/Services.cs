@@ -38,6 +38,7 @@ return services;
 public static IServiceCollection AddScriptableObjects(this IServiceCollection services)
 {
 Skua.Core.AppStartup.Services.AddBotServices(services);
+services.AddSingleton<IPluginHelper, PluginHelper>();
 return services;
 }
 public static IServiceCollection AddSkuaMainAppViewModels(this IServiceCollection services)
