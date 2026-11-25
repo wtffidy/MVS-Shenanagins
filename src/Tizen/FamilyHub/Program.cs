@@ -347,7 +347,8 @@ public sealed class FamilyHubApplication : NUIApplication
     private static string CreateErrorPage(string message)
     {
         string encoded = System.Net.WebUtility.HtmlEncode(message);
-        return $"""
+        return string.Concat(
+            """
             <!doctype html>
             <html lang="en">
             <head>
@@ -362,10 +363,14 @@ public sealed class FamilyHubApplication : NUIApplication
             <body>
                 <h1>MVS could not start</h1>
                 <p>The local game runtime did not initialize.</p>
-                <pre>{{encoded}}</pre>
+                <pre>
+            """,
+            encoded,
+            """
+                </pre>
             </body>
             </html>
-            """;
+            """);
     }
 
     protected override void OnTerminate()
