@@ -58,7 +58,7 @@ public sealed class FamilyHubApplication : NUIApplication
             if (_services?.GetRequiredService<IScriptInterface>() is IScriptInterfaceManager scriptInterfaceManager)
                 scriptInterfaceManager.Initialize();
 
-            string appPage = Path.Combine(Application.Current.DirectoryInfo.Resource, "web", "index.html");
+            string appPage = Application.Current.DirectoryInfo.Resource + "web/index.html";
             _gameView.LoadUrl(appPage);
         }
         catch (Exception ex)
@@ -129,7 +129,7 @@ public sealed class FamilyHubApplication : NUIApplication
             return;
 
         string url = JsonSerializer.Serialize(_gameUrl);
-        _gameView.EvaluateJavaScript($"window.MVSClient?.setGameUrl({url});");
+        _gameView.EvaluateJavaScript($"window.MVSClient && window.MVSClient.setGameUrl({url});");
     }
 
     private void OnFlashCall(string function, params object[] args)
@@ -290,7 +290,7 @@ public sealed class FamilyHubApplication : NUIApplication
     private void SendToUi(object message)
     {
         string json = JsonSerializer.Serialize(message);
-        RunOnUiThread(() => _gameView?.EvaluateJavaScript($"window.MVSClient?.receive({json});"));
+        RunOnUiThread(() => _gameView?.EvaluateJavaScript($"window.MVSClient && window.MVSClient.receive({json});"));
     }
 
     private void RunOnUiThread(Action action)
