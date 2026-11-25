@@ -6,7 +6,7 @@
         viewmodes="maximized">
     <tizen:application id="mvsprobe01.mvstvprobe"
                        package="mvsprobe01"
-                       required_version="2.3" />
+                       required_version="5.5" />
     <content src="index.html" />
     <name>MVS TV Probe</name>
     <description>Checks the Samsung TV browser features needed by the MVS port.</description>
