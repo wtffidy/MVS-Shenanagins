@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="shared\res\MvsFamilyHub.png" />
+    <Folder Include="res\" />
+    <Folder Include="shared\res\" />
   </ItemGroup>
 </Project>
