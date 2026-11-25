@@ -49,7 +49,7 @@ jobs:
       - name: Verify exported client assets
         run: |
           test -s "$RUNNER_TEMP/mvs-tizen-assets/ruffle/ruffle.js"
-          test -s "$RUNNER_TEMP/mvs-tizen-assets/ruffle/ruffle.wasm"
+          test -s "$RUNNER_TEMP/mvs-tizen-assets/ruffle/ruffle_web_bg.DOUD4ENO.wasm"
           test -s "$RUNNER_TEMP/mvs-tizen-assets/skua.swf"
 
       - name: Upload exported Ruffle assets
