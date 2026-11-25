@@ -499,7 +499,7 @@ data = PatchRuffle(data);
 _resourceCache[name] = data;
 return data;
 }
-private static byte[] PatchRuffle(byte[] data)
+internal static byte[] PatchRuffle(byte[] data)
 {
 string js = Encoding.UTF8.GetString(data);
 string patched = ExternalCallRegex().Replace(js, m =>
