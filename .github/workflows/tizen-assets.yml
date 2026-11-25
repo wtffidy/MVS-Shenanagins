@@ -7,12 +7,20 @@ on:
     paths:
       - ".github/workflows/tizen-assets.yml"
       - "src/Skua.Flash.Ruffle/**"
+      - "src/Skua.Core/**"
+      - "src/Skua.Core.Interfaces/**"
+      - "src/Skua.Core.Models/**"
+      - "src/Skua.Core.Utils/**"
       - "src/tools/RuffleAssetPack/**"
       - "src/Tizen/**"
   pull_request:
     paths:
       - ".github/workflows/tizen-assets.yml"
       - "src/Skua.Flash.Ruffle/**"
+      - "src/Skua.Core/**"
+      - "src/Skua.Core.Interfaces/**"
+      - "src/Skua.Core.Models/**"
+      - "src/Skua.Core.Utils/**"
       - "src/tools/RuffleAssetPack/**"
       - "src/Tizen/**"
 
@@ -45,11 +53,22 @@ jobs:
       - name: Export patched Ruffle assets
         run: dotnet run --project src/tools/RuffleAssetPack/RuffleAssetPack.csproj --framework net10.0 --configuration Release -- "$RUNNER_TEMP/mvs-tizen-assets"
 
-      - name: Validate Tizen client JavaScript
+      - name: Validate Samsung TV client JavaScript
         run: node --check src/Tizen/Shared/app.js
 
-      - name: Validate Samsung TV manifest XML
-        run: python -c "import xml.etree.ElementTree as ET; ET.parse('src/Tizen/TV/config.xml')"
+      - name: Validate Family Hub client JavaScript
+        run: node --check src/Tizen/FamilyHub/res/web/app.js
+
+      - name: Validate Tizen package manifests
+        run: |
+          python -c "import xml.etree.ElementTree as ET; ET.parse('src/Tizen/TV/config.xml')"
+          python -c "import xml.etree.ElementTree as ET; ET.parse('src/Tizen/FamilyHub/tizen-manifest.xml')"
+
+      - name: Verify Family Hub packaged resources
+        run: |
+          test -s src/Tizen/FamilyHub/res/web/index.html
+          test -s src/Tizen/FamilyHub/res/web/app.css
+          test -s src/Tizen/FamilyHub/res/web/app.js
 
       - name: Verify exported client assets
         run: |
