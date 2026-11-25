@@ -161,5 +161,6 @@
     window.addEventListener("load", () => {
         send("status");
         send("scripts");
+        window.setInterval(() => send("status"), 3000);
     });
 })();
