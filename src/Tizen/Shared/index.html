@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#10131a">
+    <title>MVS for Samsung TV</title>
+    <link rel="stylesheet" href="app.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <img src="icon.png" alt="" class="brand-icon">
+                <div>
+                    <p class="eyebrow">MO VIBE SKUA</p>
+                    <h1>MVS <span>TV</span></h1>
+                </div>
+            </div>
+            <div class="platform-pill"><span class="status-dot"></span> TIZEN COMPATIBILITY BUILD</div>
+        </header>
+
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">SAMSUNG SMART TV</p>
+                <h2>The game client, on the big screen.</h2>
+                <p class="subtitle">This first TV package checks the Ruffle engine and remote-control input on real Tizen hardware. The C# bot runtime connection is the next integration step.</p>
+                <div class="hero-actions">
+                    <button id="run-engine" class="primary" type="button">Run Ruffle test</button>
+                    <button id="run-checks" class="secondary" type="button">Check device support</button>
+                </div>
+            </div>
+            <div class="hero-mark" aria-hidden="true">
+                <div class="orbit orbit-one"></div>
+                <div class="orbit orbit-two"></div>
+                <div class="mark-core">MVS</div>
+            </div>
+        </section>
+
+        <section class="status-panel" aria-live="polite">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">DEVICE CHECK</p>
+                    <h3>Runtime capabilities</h3>
+                </div>
+                <span id="check-summary" class="summary">Not checked</span>
+            </div>
+            <div id="capability-grid" class="capability-grid">
+                <div class="capability waiting"><span>WebAssembly</span><b>Pending</b></div>
+                <div class="capability waiting"><span>WebGL</span><b>Pending</b></div>
+                <div class="capability waiting"><span>WebSockets</span><b>Pending</b></div>
+                <div class="capability waiting"><span>Web Crypto</span><b>Pending</b></div>
+            </div>
+        </section>
+
+        <section class="engine-panel" id="engine-panel" hidden>
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">LOCAL ASSET TEST</p>
+                    <h3>Ruffle player</h3>
+                </div>
+                <button id="close-engine" class="icon-button" type="button" aria-label="Close Ruffle test">×</button>
+            </div>
+            <div id="engine-host" class="engine-host"></div>
+            <p id="engine-status" class="engine-status">Waiting to start...</p>
+        </section>
+
+        <section class="notice">
+            <div class="notice-icon">i</div>
+            <div>
+                <h3>What works in this build?</h3>
+                <p>The WGT bundles MVS's patched Ruffle assets, including the local SWF client. It does not log in to AQW or run scripts yet. Those require the authenticated connection to MVS's C# runtime, which is being developed separately rather than exposing the existing loopback server to the network.</p>
+            </div>
+        </section>
+
+        <footer>
+            <span>MVS · Tizen TV development build</span>
+            <span id="version">0.1.0 · ENGINE SMOKE TEST</span>
+        </footer>
+    </main>
+</body>
+</html>
