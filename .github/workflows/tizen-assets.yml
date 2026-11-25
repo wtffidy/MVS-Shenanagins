@@ -11,6 +11,7 @@ on:
       - "src/Skua.Core.Interfaces/**"
       - "src/Skua.Core.Models/**"
       - "src/Skua.Core.Utils/**"
+      - "src/Skua.Core.Generators/**"
       - "src/tools/RuffleAssetPack/**"
       - "src/Tizen/**"
   pull_request:
@@ -21,6 +22,7 @@ on:
       - "src/Skua.Core.Interfaces/**"
       - "src/Skua.Core.Models/**"
       - "src/Skua.Core.Utils/**"
+      - "src/Skua.Core.Generators/**"
       - "src/tools/RuffleAssetPack/**"
       - "src/Tizen/**"
 
