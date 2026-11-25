@@ -24,6 +24,8 @@ This remains a device integration prototype, not a complete production UI. Scrip
 - .NET 8 Tizen workload and a configured Tizen author certificate.
 - Samsung Family Hub device or matching Tizen IoT emulator for runtime validation.
 
+The native project also compiles in GitHub Actions against Samsung's Tizen .NET workload for `net8.0-tizen10.0`. This verifies the Tizen API and shared runtime compile path, but it does not create a signed `.tpk` or prove the runtime works on a refrigerator.
+
 Build from the repository root using the wrapper script:
 
 ```powershell
