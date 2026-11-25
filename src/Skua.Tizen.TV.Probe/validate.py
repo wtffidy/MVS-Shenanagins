@@ -38,8 +38,8 @@ def main() -> None:
     if not application_id or not package_id:
         fail("Tizen application ID and package ID must both be set.")
 
-    if application.attrib.get("required_version") != "2.3":
-        fail("The probe baseline is expected to remain Tizen 2.3 so older devices can report missing WASM support.")
+    if application.attrib.get("required_version") != "5.5":
+        fail("The probe baseline is Tizen 5.5, the first Samsung TV platform generation documented with WebAssembly support.")
 
     html = HTML_PATH.read_text(encoding="utf-8")
     references = re.findall(r'<script\b[^>]*?\bsrc=["\']([^"\']+)["\']', html)
