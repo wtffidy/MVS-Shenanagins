@@ -41,13 +41,13 @@ jobs:
       - name: Pin the .NET 8 SDK for the Tizen workload
         shell: bash
         run: |
-          sdk_version="$(dotnet --list-sdks | awk '$1 ~ /^8\\.0\\./ { version = $1 } END { print version }')"
+          sdk_version="$(dotnet --list-sdks | awk 'index($1, "8.0.") == 1 { version = $1 } END { print version }')"
           if [ -z "$sdk_version" ]; then
             echo "No .NET 8 SDK was found."
             exit 1
           fi
           mkdir -p "$RUNNER_TEMP/tizen-workload"
-          printf '{ "sdk": { "version": "%s", "rollForward": "latestPatch" } }\\n' "$sdk_version" > "$RUNNER_TEMP/tizen-workload/global.json"
+          printf '{ "sdk": { "version": "%s", "rollForward": "latestPatch" } }\n' "$sdk_version" > "$RUNNER_TEMP/tizen-workload/global.json"
           echo "Using .NET SDK $sdk_version for the Tizen workload."
 
       - name: Install Samsung Tizen .NET workload
