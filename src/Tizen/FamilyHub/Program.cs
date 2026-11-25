@@ -11,6 +11,7 @@ using Tizen;
 using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
+using Path = System.IO.Path;
 
 namespace Mvs.FamilyHub;
 
