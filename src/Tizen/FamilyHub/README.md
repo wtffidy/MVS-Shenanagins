@@ -19,11 +19,13 @@ This is a native runtime integration prototype, not yet a finished Family Hub UI
 - .NET 8 Tizen workload and a configured Tizen author certificate.
 - Samsung Family Hub device or matching Tizen IoT emulator for runtime validation.
 
-Build from this directory using the Tizen .NET CLI:
+Build from the repository root using the wrapper script:
 
 ```powershell
-tizen build-cs
+.\src\Tizen\build-familyhub.ps1
 ```
+
+The wrapper copies the existing MVS launcher image into the package resources and invokes the Tizen .NET CLI (`tizen build-cs`) from the project directory.
 
 The Tizen SDK produces a signed `.tpk` package under the project's `bin` output folder. The app icon is copied from `src/tools/icon/monogram.png` into `shared/res/MvsFamilyHub.png` by the repository's build script.
 
