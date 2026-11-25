@@ -42,8 +42,8 @@ def main() -> None:
         fail("The probe baseline is expected to remain Tizen 2.3 so older devices can report missing WASM support.")
 
     html = HTML_PATH.read_text(encoding="utf-8")
-    references = re.findall(r'<script\\b[^>]*?\\bsrc=["\']([^"\']+)["\']', html)
-    references.extend(re.findall(r'<link\\b[^>]*?\\bhref=["\']([^"\']+)["\']', html))
+    references = re.findall(r'<script\b[^>]*?\bsrc=["\']([^"\']+)["\']', html)
+    references.extend(re.findall(r'<link\b[^>]*?\bhref=["\']([^"\']+)["\']', html))
 
     for reference in references:
         if reference.startswith(("http://", "https://", "//", "data:")):
