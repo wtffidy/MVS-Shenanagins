@@ -3,7 +3,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Skua.Core.Interfaces;
 using Skua.Core.Interfaces.Services;
+using Skua.Core.Options;
+using Skua.Core.Plugins;
 using Skua.Core.Scripts;
+using Skua.Core.Scripts.Helpers;
+using Skua.Core.Skills;
 using Skua.Core.Services;
 using Skua.Core.Utils;
 using System.IO.Compression;
@@ -12,6 +16,65 @@ using System.Reflection.PortableExecutable;
 namespace Skua.Core.AppStartup;
 public static class Services
 {
+public static IServiceCollection AddCompiler(this IServiceCollection services)
+{
+services.AddTransient(CreateCompiler);
+return services;
+}
+public static IServiceCollection AddBotServices(this IServiceCollection services, bool includeRemoteControl = true)
+{
+services.AddSingleton<IScriptInterface, ScriptInterface>();
+services.AddSingleton<IScriptManager, ScriptManager>();
+services.AddSingleton<IScriptStatus, ScriptManager>();
+services.AddSingleton<IScriptInventoryHelper, ScriptInventoryHelper>();
+services.AddSingleton<IScriptInventory, ScriptInventory>();
+services.AddSingleton<IScriptHouseInv, ScriptHouseInv>();
+services.AddSingleton<IScriptTempInv, ScriptTempInv>();
+services.AddSingleton<IScriptBank, ScriptBank>();
+services.AddSingleton<IAdvancedSkillContainer, AdvancedSkillContainer>();
+services.AddSingleton<IUltraBossHelper, UltraBossHelper>();
+services.AddSingleton<IScriptCombat, ScriptCombat>();
+services.AddSingleton<IScriptKill, ScriptKill>();
+services.AddSingleton<IScriptHunt, ScriptHunt>();
+services.AddSingleton<IScriptSkill, ScriptSkill>();
+services.AddSingleton<IScriptAuto, ScriptAuto>();
+services.AddSingleton<IScriptSelfAuras, ScriptSelfAuras>();
+services.AddSingleton<IScriptTargetAuras, ScriptTargetAuras>();
+services.AddSingleton<IScriptFaction, ScriptFaction>();
+services.AddSingleton<IScriptMonster, ScriptMonster>();
+services.AddSingleton<IScriptPlayer, ScriptPlayer>();
+services.AddSingleton<IScriptQuest, ScriptQuest>();
+services.AddSingleton<IScriptBoost, ScriptBoost>();
+services.AddSingleton<IScriptShop, ScriptShop>();
+services.AddSingleton<IScriptDrop, ScriptDrop>();
+services.AddSingleton<IScriptMap, ScriptMap>();
+services.AddSingleton<IScriptServers, ScriptServers>();
+services.AddSingleton<IScriptEvent, ScriptEvent>();
+services.AddSingleton<IScriptSend, ScriptSend>();
+services.AddTransient<IScriptOptionContainer, ScriptOptionContainer>();
+services.AddTransient<IOptionContainer, OptionContainer>();
+services.AddSingleton<IScriptOption, ScriptOption>();
+services.AddSingleton<IScriptLite, ScriptLite>();
+services.AddSingleton<IScriptBotStats, ScriptBotStats>();
+services.AddSingleton<IScriptHandlers, ScriptHandlers>();
+services.AddSingleton<IScriptWait, ScriptWait>();
+services.AddSingleton<IScriptAccounts, ScriptAccounts>();
+services.AddSingleton<ICaptureProxy, CaptureProxy>();
+services.AddSingleton<IPluginManager, PluginManager>();
+services.AddTransient<IPluginContainer, PluginContainer>();
+services.AddSingleton<IPluginHelper, PluginHelper>();
+services.AddSingleton<IMapService, MapService>();
+services.AddSingleton<ILogService, LogService>();
+services.AddSingleton<IQuestDataLoaderService, QuestDataLoaderService>();
+services.AddSingleton<IGrabberService, GrabberService>();
+services.AddSingleton<IClientFilesService, ClientFilesService>();
+services.AddSingleton<IAuraMonitorService, AuraMonitorService>();
+services.AddSingleton<IJunkService, JunkService>();
+services.AddSingleton<BackgroundThemeService>();
+if (includeRemoteControl && !OperatingSystem.IsAndroid())
+services.AddSingleton<IRemoteControlService, RemoteControlService>();
+return services;
+}
 public static IServiceCollection AddCommonServices(this IServiceCollection services)
 {
 services.AddTransient(typeof(Lazy<>), typeof(LazyInstance<>));
