@@ -354,15 +354,15 @@ public sealed class FamilyHubApplication : NUIApplication
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                    body {{ margin: 0; padding: 5vw; background: #10131a; color: #f3f5fa; font: 24px Arial, sans-serif; }}
-                    h1 {{ color: #91adff; }}
-                    pre {{ white-space: pre-wrap; color: #ffb8c0; }}
+                    body { margin: 0; padding: 5vw; background: #10131a; color: #f3f5fa; font: 24px Arial, sans-serif; }
+                    h1 { color: #91adff; }
+                    pre { white-space: pre-wrap; color: #ffb8c0; }
                 </style>
             </head>
             <body>
                 <h1>MVS could not start</h1>
                 <p>The local game runtime did not initialize.</p>
-                <pre>{encoded}</pre>
+                <pre>{{encoded}}</pre>
             </body>
             </html>
             """;
