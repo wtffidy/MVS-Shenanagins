@@ -5,10 +5,10 @@ using Skua.Core.Interfaces;
 using Skua.Core.Interfaces.Services;
 using Skua.Core.Models;
 using Skua.Core.Services;
-using Skua.Core.Scripts;
 using Skua.Flash.Ruffle;
-using System.Diagnostics;
+using System.Text.Json;
 using Tizen;
+using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 
@@ -22,14 +22,15 @@ public sealed class FamilyHubApplication : NUIApplication
     private ServiceProvider? _services;
     private WebView? _gameView;
     private RuffleFlashUtil? _flash;
+    private IScriptManager? _scriptManager;
+    private string? _gameUrl;
+    private SynchronizationContext? _uiContext;
     private bool _disposed;
 
-    /// <summary>
-    /// Initializes the local MVS runtime and opens its Ruffle client in the NUI WebView.
-    /// </summary>
     protected override void OnCreate()
     {
         base.OnCreate();
+        _uiContext = SynchronizationContext.Current;
 
         Window window = GetDefaultWindow();
         window.BackgroundColor = Color.Black;
@@ -40,22 +41,35 @@ public sealed class FamilyHubApplication : NUIApplication
             Size = window.Size,
             BackgroundColor = Color.Black
         };
+        _gameView.PageLoadFinished += OnPageLoadFinished;
+        _gameView.AddJavaScriptMessageHandler("MVSBridge", OnBridgeMessage);
         window.Add(_gameView);
 
         try
         {
             InitializeRuntime();
-            NavigateToGame();
+            if (_flash is null)
+                throw new InvalidOperationException("The MVS Flash runtime was not initialized.");
+
+            _flash.InitializeFlash();
+            if (!_flash.Host.IsRunning)
+                throw new InvalidOperationException("The MVS local game host did not start.");
+
+            if (_services?.GetRequiredService<IScriptInterface>() is IScriptInterfaceManager scriptInterfaceManager)
+                scriptInterfaceManager.Initialize();
+
+            string appPage = Path.Combine(Application.Current.DirectoryInfo.Resource, "web", "index.html");
+            _gameView.LoadUrl(appPage);
         }
         catch (Exception ex)
         {
             Log.Error("MVS-FamilyHub", $"Startup failed: {ex}");
-            _gameView.LoadHtmlString(CreateErrorPage(ex.Message));
+            _gameView?.LoadHtmlString(CreateErrorPage(ex.Message));
         }
     }
 
     /// <summary>
-    /// Sets up the existing MVS bot services and the local Ruffle HTTP/WebSocket host.
+    /// Sets up the shared MVS bot services, settings, and local Ruffle HTTP/WebSocket host.
     /// </summary>
     private void InitializeRuntime()
     {
@@ -88,45 +102,212 @@ public sealed class FamilyHubApplication : NUIApplication
         _flash = _services.GetRequiredService<RuffleFlashUtil>();
         _flash.PageRequested += OnPageRequested;
         _flash.FlashCall += OnFlashCall;
+        _scriptManager = _services.GetRequiredService<IScriptManager>();
 
-        // Constructing the script interface attaches MVS's existing Flash API handlers.
+        // Construction attaches the existing MVS Flash API handlers.
         _ = _services.GetRequiredService<IScriptInterface>();
-    }
-
-    /// <summary>
-    /// Starts the original MVS Ruffle host and navigates the native WebView to its loopback URL.
-    /// </summary>
-    private void NavigateToGame()
-    {
-        if (_flash is null)
-            throw new InvalidOperationException("The MVS Flash runtime was not initialized.");
-
-        _flash.InitializeFlash();
-
-        if (!_flash.Host.IsRunning)
-            throw new InvalidOperationException("The MVS local game host did not start.");
     }
 
     private void OnPageRequested(string url)
     {
-        _gameView?.LoadUrl(url);
+        _gameUrl = url;
+        RunOnUiThread(SetGameUrl);
     }
 
-    /// <summary>
-    /// Handles the initial game-load request before handing subsequent Flash calls to MVS.
-    /// </summary>
+    private void OnPageLoadFinished(object? sender, EventArgs e)
+    {
+        RunOnUiThread(() =>
+        {
+            SetGameUrl();
+            RequestStatus();
+        });
+    }
+
+    private void SetGameUrl()
+    {
+        if (_gameView is null || string.IsNullOrWhiteSpace(_gameUrl))
+            return;
+
+        string url = JsonSerializer.Serialize(_gameUrl);
+        _gameView.EvaluateJavaScript($"window.MVSClient?.setGameUrl({url});");
+    }
+
     private void OnFlashCall(string function, params object[] args)
     {
         if (function == "requestLoadGame")
             _flash?.Call("loadClient");
     }
 
-    private void OnKeyEvent(object? sender, Window.KeyEventArgs e)
+    private void OnBridgeMessage(string rawMessage)
     {
-        if (e.Key.State != Key.StateType.Down)
+        try
+        {
+            using JsonDocument message = JsonDocument.Parse(rawMessage);
+            JsonElement root = message.RootElement;
+            string? action = root.TryGetProperty("action", out JsonElement actionElement)
+                ? actionElement.GetString()
+                : null;
+
+            switch (action)
+            {
+                case "status":
+                    RequestStatus();
+                    break;
+                case "scripts":
+                    SendScripts();
+                    break;
+                case "loadScript":
+                    LoadScript(root);
+                    break;
+                case "startScript":
+                    _ = StartScriptAsync();
+                    break;
+                case "stopScript":
+                    _ = StopScriptAsync();
+                    break;
+                case "pauseScript":
+                    _ = SetScriptPausedAsync(root);
+                    break;
+                case "logs":
+                    SendScriptLogs();
+                    break;
+                default:
+                    SendToUi(new { type = "error", message = "Unknown MVS action." });
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            SendToUi(new { type = "error", message = ex.Message });
+        }
+    }
+
+    private void RequestStatus()
+    {
+        IScriptInterface? bot = _services?.GetService<IScriptInterface>();
+        SendToUi(new
+        {
+            type = "status",
+            gameConnected = bot?.Player.LoggedIn ?? false,
+            scriptRunning = _scriptManager?.ScriptRunning ?? false,
+            scriptPaused = _scriptManager?.ScriptPaused ?? false,
+            loadedScript = _scriptManager?.LoadedScript ?? string.Empty
+        });
+    }
+
+    private void SendScripts()
+    {
+        string root = Path.GetFullPath(ClientFileSources.SkuaScriptsDIR);
+        Directory.CreateDirectory(root);
+        string rootPrefix = Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar;
+
+        object[] scripts = Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                .Contains("Cached-Scripts", StringComparer.OrdinalIgnoreCase))
+            .Select(Path.GetFullPath)
+            .Where(path => path.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+            .Select(path => (object)new { name = Path.GetFileNameWithoutExtension(path), path })
+            .ToArray();
+
+        SendToUi(new { type = "scripts", items = scripts });
+    }
+
+    private void LoadScript(JsonElement root)
+    {
+        if (_scriptManager is null || !root.TryGetProperty("path", out JsonElement pathElement))
             return;
 
-        if (e.Key.KeyPressedName is "XF86Back" or "Escape" or "BackSpace")
+        string? requestedPath = pathElement.GetString();
+        if (string.IsNullOrWhiteSpace(requestedPath))
+            return;
+
+        string scriptsRoot = Path.GetFullPath(ClientFileSources.SkuaScriptsDIR);
+        string rootPrefix = Path.TrimEndingDirectorySeparator(scriptsRoot) + Path.DirectorySeparatorChar;
+        string fullPath = Path.GetFullPath(requestedPath);
+
+        if (!fullPath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase)
+            || !fullPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+            || !File.Exists(fullPath))
+        {
+            SendToUi(new { type = "error", message = "The selected script is outside the MVS scripts folder or does not exist." });
+            return;
+        }
+
+        _scriptManager.SetLoadedScript(fullPath);
+        SendToUi(new { type = "scriptLoaded", path = fullPath, name = Path.GetFileNameWithoutExtension(fullPath) });
+        RequestStatus();
+    }
+
+    private async Task StartScriptAsync()
+    {
+        if (_scriptManager is null)
+            return;
+
+        Exception? error = await _scriptManager.StartScript().ConfigureAwait(false);
+        RunOnUiThread(() =>
+        {
+            SendToUi(new { type = "operation", action = "startScript", success = error is null, message = error?.Message ?? "Script started." });
+            RequestStatus();
+        });
+    }
+
+    private async Task StopScriptAsync()
+    {
+        if (_scriptManager is null)
+            return;
+
+        await _scriptManager.StopScript().ConfigureAwait(false);
+        RunOnUiThread(() =>
+        {
+            SendToUi(new { type = "operation", action = "stopScript", success = true, message = "Script stopped." });
+            RequestStatus();
+        });
+    }
+
+    private async Task SetScriptPausedAsync(JsonElement root)
+    {
+        if (_scriptManager is null || !root.TryGetProperty("paused", out JsonElement pausedElement))
+            return;
+
+        bool paused = pausedElement.GetBoolean();
+        bool success = await _scriptManager.SetPausedAsync(paused).ConfigureAwait(false);
+        RunOnUiThread(() =>
+        {
+            string result = paused ? "Script paused." : "Script resumed.";
+            SendToUi(new { type = "operation", action = "pauseScript", success, message = success ? result : "Could not change script state." });
+            RequestStatus();
+        });
+    }
+
+    private void SendScriptLogs()
+    {
+        ILogService? logService = _services?.GetService<ILogService>();
+        string[] entries = logService?.GetLogs(LogType.Script).TakeLast(150).ToArray() ?? Array.Empty<string>();
+        SendToUi(new { type = "logs", items = entries });
+    }
+
+    private void SendToUi(object message)
+    {
+        string json = JsonSerializer.Serialize(message);
+        RunOnUiThread(() => _gameView?.EvaluateJavaScript($"window.MVSClient?.receive({json});"));
+    }
+
+    private void RunOnUiThread(Action action)
+    {
+        if (_uiContext is null)
+        {
+            action();
+            return;
+        }
+
+        _uiContext.Post(_ => action(), null);
+    }
+
+    private void OnKeyEvent(object? sender, Window.KeyEventArgs e)
+    {
+        if (e.Key.State == Key.StateType.Down
+            && (e.Key.KeyPressedName is "XF86Back" or "Escape" or "BackSpace"))
             Exit();
     }
 
@@ -154,9 +335,6 @@ public sealed class FamilyHubApplication : NUIApplication
             """;
     }
 
-    /// <summary>
-    /// Releases the WebView and all local MVS runtime services when the app is terminated.
-    /// </summary>
     protected override void OnTerminate()
     {
         DisposeRuntime();
@@ -182,11 +360,9 @@ public sealed class FamilyHubApplication : NUIApplication
         _services?.Dispose();
         _services = null;
         _flash = null;
+        _scriptManager = null;
     }
 
-    /// <summary>
-    /// Starts the Family Hub application.
-    /// </summary>
     public static void Main(string[] args)
     {
         IsUsingXaml = false;
@@ -250,9 +426,9 @@ internal sealed class FamilyHubInputDialogViewModel : Skua.Core.Interfaces.ViewM
 {
     public FamilyHubInputDialogViewModel(string title, string dialogHint)
     {
-        DialogTextInput = title;
+        DialogTextInput = string.Empty;
         DialogHint = dialogHint;
-        TextBoxHint = string.Empty;
+        TextBoxHint = title;
     }
 
     public bool NumberOnly => false;
