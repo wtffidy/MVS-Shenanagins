@@ -18,11 +18,15 @@ The packaged Web application can contain its own HTML, JavaScript, CSS, and WebA
 
 ### Samsung Family Hub
 
-Family Hub is a separate Tizen device profile. Samsung explicitly warns that Family Hub applications are not fully compatible with Smart TV applications and require modifications to meet TV application specifications. The project will keep separate app manifests/configuration and input/layout profiles rather than assuming one WGT is automatically compatible with both product families.
+Family Hub is a separate platform target. Samsung's Family Hub developer portal points developers to Tizen Studio and the Family Hub Remote Test Lab, and identifies the platform as supporting native application development. Samsung also warns that Family Hub applications are not fully compatible with Smart TV applications. General Tizen documentation describes Web (WGT) and hybrid packages for TV and IoT devices, but that alone does not prove that a given Family Hub model/firmware accepts the same package profile or APIs.
+
+The Family Hub target will therefore be a separate project. Its package type, Tizen profile, minimum firmware, available APIs, and distribution path must be confirmed against the exact refrigerator model and software version before implementation. We must not copy the TV manifest and merely change its name.
 
 ### Packaging and distribution
 
-The app code and game assets must be packaged locally in the WGT. Samsung says hosted/cloud applications are generally not accepted except by special approval, and hosted apps do not have access to Tizen APIs. A remote service may provide game/session functionality, but it must not replace the installed app with a remote web page.
+The TV app code and Ruffle assets must be packaged locally in the WGT. Samsung says hosted/cloud applications are generally not accepted except by special approval, and hosted apps do not have access to Tizen APIs. A remote service may provide game/session functionality, but it must not replace the installed app with a remote web page.
+
+Samsung requires Web applications that contact external servers to declare the Internet privilege and an explicit `<access origin="...">` policy in `config.xml`. The companion endpoint must be allowlisted once its address and TLS deployment are defined.
 
 ## MVS-specific technical constraint
 
@@ -40,11 +44,13 @@ A front-end-only WGT would therefore display at best a partial game client. It w
 ## Port architecture under evaluation
 
 1. **TV Web app:** a signed, locally packaged WGT that owns the TV layout, remote-control navigation, Ruffle player, bundled web assets, and device-specific input handling.
-2. **Family Hub Web app:** a separate WGT profile with touch-first navigation, refrigerator-sized layout, and Family Hub-specific capabilities where the target firmware permits them.
-3. **MVS service host:** a .NET service that reuses the existing Core, script runtime, Ruffle host/proxy, and session services. The installed web clients connect to it through an authenticated network channel. This host could run on a supported companion device or computer; it must not silently expose the existing loopback-only server to the LAN.
+2. **Family Hub app:** a separate project using the package type and APIs validated for the refrigerator's exact Tizen version. A web/hybrid route is attractive for reusing Ruffle; a native Tizen service may be an option for retaining .NET functionality, subject to the available Family Hub SDK/runtime.
+3. **TV MVS service host:** a .NET service that reuses the existing Core, script runtime, Ruffle proxy, and session services. The TV WGT connects to it through an authenticated, encrypted network channel. This host could run on a supported companion phone or computer; it must not expose the existing loopback-only server to the LAN without pairing, TLS, origin validation, and request restrictions.
 4. **Shared protocol:** a narrow, versioned client/service contract for pairing, session state, game bridge messages, and supported app actions. The app must fail clearly when no compatible service is available.
 
-This is an architectural direction, not a claim that a finished companion host or device connection already exists. The next implementation work must validate the service transport, trust/pairing model, and which MVS features can be controlled remotely before the UI is presented as functional.
+This is an architectural direction, not a claim that a finished companion host or device connection already exists. The next implementation work must validate the service transport, trust/pairing model, browser origin/CORS behavior, and which MVS features can be controlled remotely before the UI is presented as functional. For Family Hub, the SDK/runtime choice must be checked independently rather than assumed to match the TV service arrangement.
+
+The TV probe intentionally sets Tizen 5.5 as its minimum platform baseline because Samsung documents WebAssembly support on Smart TVs from Tizen 5.5. Older TVs are not treated as viable Ruffle targets by this initial design.
 
 ## Validation requirements
 
@@ -63,4 +69,6 @@ This is an architectural direction, not a claim that a finished companion host o
 - Samsung hosted applications FAQ: https://developer.samsung.com/smarttv/develop/faq/hosted-applications.html
 - Samsung Family Hub developer portal: https://developer.samsung.com/family-hub
 - Samsung Smart TV FAQ on Family Hub compatibility: https://developer.samsung.com/smarttv/develop/faq/other-features.html
+- Samsung Smart TV networking and external-origin policy: https://developer.samsung.com/smarttv/develop/faq/networking-and-connectivity.html
 - Tizen Web application and hybrid application model: https://github.com/Samsung/tizen-docs/blob/master/docs/application/web/index.md
+- Tizen hybrid application development: https://github.com/Samsung/tizen-docs/blob/master/docs/application/web/guides/development/index.md
