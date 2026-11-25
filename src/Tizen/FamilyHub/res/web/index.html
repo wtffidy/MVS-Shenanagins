@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#11131b">
+    <title>MVS · Family Hub</title>
+    <link rel="stylesheet" href="app.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">M</div>
+                <div>
+                    <span class="eyebrow">MO VIBE SKUA</span>
+                    <h1>MVS <span>Family Hub</span></h1>
+                </div>
+            </div>
+            <div class="connection">
+                <span id="connection-dot" class="dot offline"></span>
+                <span id="connection-label">Connecting to game</span>
+                <span class="separator"></span>
+                <span id="player-name">Not logged in</span>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <nav class="nav-rail" aria-label="MVS sections">
+                <button class="nav-button active" data-view="game" type="button"><span class="nav-icon">◈</span><span>Game</span></button>
+                <button class="nav-button" data-view="scripts" type="button"><span class="nav-icon">⌘</span><span>Scripts</span></button>
+                <button class="nav-button" data-view="bot" type="button"><span class="nav-icon">⚙</span><span>Bot</span></button>
+                <button class="nav-button" data-view="logs" type="button"><span class="nav-icon">≡</span><span>Logs</span></button>
+            </nav>
+
+            <main class="content">
+                <section id="view-game" class="view active">
+                    <div class="game-toolbar">
+                        <div><span class="eyebrow">ADVENTURE QUEST WORLDS</span><h2>Game</h2></div>
+                        <span class="live-badge"><span class="dot"></span> LOCAL RUFFLE</span>
+                    </div>
+                    <div class="game-frame">
+                        <div id="game-placeholder" class="game-placeholder">
+                            <div class="loader-orbit"></div>
+                            <h3>Starting the game client</h3>
+                            <p>Connecting the local MVS runtime and Ruffle player…</p>
+                        </div>
+                        <iframe id="game-frame" title="AdventureQuest Worlds" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
+                    </div>
+                </section>
+
+                <section id="view-scripts" class="view">
+                    <div class="page-heading">
+                        <div><span class="eyebrow">COMMUNITY AUTOMATION</span><h2>Scripts</h2></div>
+                        <button id="refresh-scripts" class="button secondary" type="button">Refresh</button>
+                    </div>
+                    <div class="split-panel">
+                        <div class="panel script-list-panel">
+                            <div class="panel-heading"><h3>Available scripts</h3><span id="script-count">0 scripts</span></div>
+                            <div id="script-list" class="script-list"><div class="empty-state">Scanning the MVS scripts folder…</div></div>
+                        </div>
+                        <div class="panel selected-panel">
+                            <span class="eyebrow">SELECTED SCRIPT</span>
+                            <h3 id="selected-script">No script selected</h3>
+                            <p id="selected-script-path">Choose a script from the list to load it into MVS.</p>
+                            <button id="load-script" class="button primary" type="button" disabled>Load script</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-bot" class="view">
+                    <div class="page-heading"><div><span class="eyebrow">AUTOMATION CONTROL</span><h2>Bot control</h2></div></div>
+                    <div class="panel bot-panel">
+                        <div class="bot-state">
+                            <span class="eyebrow">CURRENT SCRIPT</span>
+                            <h3 id="bot-script-name">None loaded</h3>
+                            <span id="bot-state-label" class="state-label">Idle</span>
+                        </div>
+                        <div class="bot-actions">
+                            <button id="start-script" class="button primary" type="button" disabled>Start</button>
+                            <button id="pause-script" class="button secondary" type="button" disabled>Pause</button>
+                            <button id="stop-script" class="button danger" type="button" disabled>Stop</button>
+                        </div>
+                    </div>
+                    <div class="panel note-panel">
+                        <h3>Runtime stays on this device</h3>
+                        <p>The game proxy, Flash bridge, and script engine are hosted locally by MVS. No companion PC or LAN game relay is required by this native Family Hub build.</p>
+                    </div>
+                </section>
+
+                <section id="view-logs" class="view">
+                    <div class="page-heading">
+                        <div><span class="eyebrow">SCRIPT OUTPUT</span><h2>Logs</h2></div>
+                        <button id="refresh-logs" class="button secondary" type="button">Refresh</button>
+                    </div>
+                    <div class="panel logs-panel"><pre id="script-logs">No script output yet.</pre></div>
+                </section>
+            </main>
+        </div>
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+</body>
+</html>
