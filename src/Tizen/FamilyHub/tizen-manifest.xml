@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages"
+          api-version="10.0"
+          package="wtffidy.mvs.familyhub"
+          version="0.1.0">
+    <profile name="common" />
+    <ui-application appid="wtffidy.mvs.familyhub"
+                    exec="Mvs.FamilyHub.dll"
+                    type="dotnet"
+                    multiple="false"
+                    taskmanage="true"
+                    nodisplay="false"
+                    launch_mode="single">
+        <label>MVS</label>
+        <icon>MvsFamilyHub.png</icon>
+        <metadata key="http://tizen.org/metadata/prefer_dotnet_aot" value="true" />
+    </ui-application>
+    <privileges>
+        <privilege>http://tizen.org/privilege/internet</privilege>
+    </privileges>
+</manifest>
