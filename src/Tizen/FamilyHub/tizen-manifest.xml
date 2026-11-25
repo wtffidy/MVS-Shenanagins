@@ -13,7 +13,6 @@
                     launch_mode="single">
         <label>MVS</label>
         <icon>MvsFamilyHub.png</icon>
-        <metadata key="http://tizen.org/metadata/prefer_dotnet_aot" value="true" />
     </ui-application>
     <privileges>
         <privilege>http://tizen.org/privilege/internet</privilege>
