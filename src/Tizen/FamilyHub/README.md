@@ -10,8 +10,13 @@ This is the native Tizen .NET starting point for Samsung Family Hub. It targets 
 - The existing patched Ruffle bundle and embedded SWF are used. No separate copy of the game frontend is maintained.
 - MVS's existing `.NET` bot service registrations and `RuffleFlashUtil` are initialized on-device.
 - The existing MVS settings store and script interface are initialized.
+- A packaged touch-first control surface provides Game, Scripts, Bot, and Logs views.
+- Scripts can be discovered, selected, loaded, started, paused/resumed, and stopped through the native C# bridge.
+- The script log view displays recent script output.
+- Script file paths are checked against the MVS scripts directory before loading.
 
-This is a native runtime integration prototype, not yet a finished Family Hub UI. Script-option dialogs, file selection, plugin windows, account management, and the touch-first bot control surface still need Family Hub implementations. The initial dialog service safely cancels unsupported dialogs instead of pretending they were accepted.
+This remains a device integration prototype, not a complete production UI. Script-option dialogs, file selection, plugin windows, account management, in-game account login, reconnect/lifecycle behavior, and the remaining MVS helper screens still need Family Hub implementations. The initial dialog service safely cancels unsupported dialogs instead of pretending they were accepted.
+
 
 ## Build prerequisites
 
@@ -27,7 +32,8 @@ Build from the repository root using the wrapper script:
 
 The wrapper copies the existing MVS launcher image into the package resources and invokes the Tizen .NET CLI (`tizen build-cs`) from the project directory.
 
-The Tizen SDK produces a signed `.tpk` package under the project's `bin` output folder. The app icon is copied from `src/tools/icon/monogram.png` into `shared/res/MvsFamilyHub.png` by the repository's build script.
+The Tizen SDK produces a signed `.tpk` package under the project's `bin` output folder. The app icon is copied from `src/tools/icon/monogram.png` into `shared/res/MvsFamilyHub.png` by the repository's build script. App-private HTML, CSS, and JavaScript assets are packaged from `res/web` and loaded using Tizen's application resource directory.
+
 
 ## Important compatibility note
 
